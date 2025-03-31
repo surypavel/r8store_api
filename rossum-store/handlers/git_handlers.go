@@ -12,12 +12,13 @@ type Settings struct {
 }
 
 type WebhookPayload struct {
-	Payload  map[string]interface{} `json:"payload"`
-	Name     string                 `json:"rossum_authorization_token"`
-	Settings Settings               `json:"settings"`
-	BaseUrl  string                 `json:"base_url"`
-	Hook     string                 `json:"hook"`
-	Secrets  map[string]interface{} `json:"secrets"`
+	PayloadAction string                 `json:"payload_action"`
+	Payload       map[string]interface{} `json:"payload"`
+	Name          string                 `json:"rossum_authorization_token"`
+	Settings      Settings               `json:"settings"`
+	BaseUrl       string                 `json:"base_url"`
+	Hook          string                 `json:"hook"`
+	Secrets       map[string]interface{} `json:"secrets"`
 }
 
 func GetCheckoutHandler(c *gin.Context) {
@@ -106,7 +107,6 @@ func PostWebhook(c *gin.Context) {
 	}
 
 	if payload.Payload["name"] == "checkout_extension" {
-		// TODO: actually add extension
 		content, err := services.GetFileByVersion(store, payload.Payload["extension"].(string), payload.Payload["version"].(string), "", "")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
