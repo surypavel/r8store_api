@@ -11,7 +11,7 @@ import (
 )
 
 type Settings struct {
-	Repositories []string `json:"repositories"`
+	Repository string `json:"repository"`
 }
 
 type WebhookPayload struct {
@@ -92,7 +92,7 @@ func PostWebhook(c *gin.Context) {
 
 			postBody, _ := json.Marshal(gin.H{
 				"settings": gin.H{
-					"repositories": []string{url},
+					"repository": url,
 				},
 			})
 
@@ -128,10 +128,10 @@ func PostWebhook(c *gin.Context) {
 		return
 	}
 
-	var store = payload.Settings.Repositories[0]
+	var store = payload.Settings.Repository
 
 	if payload.Payload["name"] == "get_extension_list" {
-		content, err := services.GetStoreHandler(payload.Settings.Repositories[0], "", "")
+		content, err := services.GetStoreHandler(payload.Settings.Repository, "", "")
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
