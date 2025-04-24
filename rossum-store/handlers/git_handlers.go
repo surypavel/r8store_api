@@ -15,15 +15,15 @@ type Settings struct {
 }
 
 type WebhookPayload struct {
-	PayloadAction string                  `json:"payload_action"`
-	Payload       map[string]interface{}  `json:"payload"`
-	Token         string                  `json:"rossum_authorization_token"`
-	Settings      Settings                `json:"settings"`
-	BaseUrl       string                  `json:"base_url"`
-	Hook          string                  `json:"hook"`
-	Command       string                  `json:"command"`
-	Secrets       map[string]interface{}  `json:"secrets"`
-	Form          *map[string]interface{} `json:"form,omitempty"`
+	Command         string                  `json:"command"`
+	Payload         map[string]interface{}  `json:"payload"`
+	Token           string                  `json:"rossum_authorization_token"`
+	Settings        Settings                `json:"settings"`
+	BaseUrl         string                  `json:"base_url"`
+	Hook            string                  `json:"hook"`
+	HookIntegration string                  `json:"hook_integration"`
+	Secrets         map[string]interface{}  `json:"secrets"`
+	Form            *map[string]interface{} `json:"form,omitempty"`
 }
 
 func GetCheckoutHandler(c *gin.Context) {
@@ -86,7 +86,8 @@ func PostWebhook(c *gin.Context) {
 		return
 	}
 
-	if payload.PayloadAction == "add_repository" {
+	if payload.Command == "add_repository" {
+		fmt.Print("Adding repository")
 		if payload.Form != nil {
 			var url = (*payload.Form)["url"].(string)
 
@@ -123,14 +124,14 @@ func PostWebhook(c *gin.Context) {
 			}
 		}
 
-		jsonData := []byte(fmt.Sprintf(`{"intent":{"form":{"command": "%s", "schema":{"properties":{"url":{"type":"string"}}}}}}`, payload.Command))
+		jsonData := []byte(fmt.Sprintf(`{"intent":{"form":{"hook_integration": "%s", "schema":{"properties":{"url":{"type":"string"}}}}}}`, payload.HookIntegration))
 		c.Data(http.StatusOK, "application/json", jsonData)
 		return
 	}
 
 	var store = payload.Settings.Repository
 
-	if payload.Payload["name"] == "get_extension_list" {
+	if payload.Payload["name"] == "get_hook_template_list" {
 		content, err := services.GetStoreHandler(payload.Settings.Repository, "", "")
 
 		if err != nil {
@@ -142,8 +143,8 @@ func PostWebhook(c *gin.Context) {
 		return
 	}
 
-	if payload.Payload["name"] == "get_extension_version" {
-		content, err := services.GetVersions(store, payload.Payload["extension"].(string))
+	if payload.Payload["name"] == "get_hook_template_version" {
+		content, err := services.GetVersions(store, payload.Payload["id"].(string))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -153,8 +154,8 @@ func PostWebhook(c *gin.Context) {
 		return
 	}
 
-	if payload.Payload["name"] == "checkout_extension" {
-		content, err := services.GetFileByVersion(store, payload.Payload["extension"].(string), payload.Payload["version"].(string), "", "")
+	if payload.Payload["name"] == "checkout_hook_template" {
+		content, err := services.GetFileByVersion(store, payload.Payload["id"].(string), payload.Payload["version"].(string), "", "")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

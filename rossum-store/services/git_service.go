@@ -171,7 +171,7 @@ func GetVersions(store, extension string) ([]string, error) {
 	return versionStrings, nil
 }
 
-func GetStoreHandler(store string, username, password string) (map[string]interface{}, error) {
+func GetStoreHandler(store string, username, password string) ([]interface{}, error) {
 	auth := &http.BasicAuth{
 		Username: username,
 		Password: password,
@@ -209,8 +209,13 @@ func GetStoreHandler(store string, username, password string) (map[string]interf
 	return findAndReadMetaFiles(worktree)
 }
 
-func findAndReadMetaFiles(worktree *git.Worktree) (map[string]interface{}, error) {
-	m := make(map[string]interface{})
+type ExternalExtension struct {
+	Id           string      `json:"id"`
+	HookTemplate interface{} `json:"hook_template"`
+}
+
+func findAndReadMetaFiles(worktree *git.Worktree) ([]interface{}, error) {
+	m := make([]interface{}, 0)
 	basePath := "dist"
 	files, err := worktree.Filesystem.ReadDir(basePath)
 	if err != nil {
@@ -226,7 +231,7 @@ func findAndReadMetaFiles(worktree *git.Worktree) (map[string]interface{}, error
 		// Try to open meta.json if it exists
 		f, err := worktree.Filesystem.Open(metaFilePath)
 		if err != nil {
-			return make(map[string]interface{}), err
+			return make([]interface{}, 0), err
 		}
 		defer f.Close()
 
@@ -234,17 +239,17 @@ func findAndReadMetaFiles(worktree *git.Worktree) (map[string]interface{}, error
 		buf := new(bytes.Buffer)
 		_, err = buf.ReadFrom(f)
 		if err != nil {
-			return make(map[string]interface{}), err
+			return make([]interface{}, 0), err
 		}
 
 		s := buf.Bytes()
 		var dat map[string]interface{}
 
 		if err := json.Unmarshal(s, &dat); err != nil {
-			return make(map[string]interface{}), err
+			return make([]interface{}, 0), err
 		}
 
-		m[dir.Name()] = dat
+		m = append(m, ExternalExtension{Id: dir.Name(), HookTemplate: dat})
 	}
 
 	return m, nil
