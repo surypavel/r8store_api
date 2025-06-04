@@ -21,7 +21,7 @@ type WebhookPayload struct {
 	Settings        Settings                `json:"settings"`
 	BaseUrl         string                  `json:"base_url"`
 	Hook            string                  `json:"hook"`
-	HookIntegration string                  `json:"hook_integration"`
+	HookIntegration string                  `json:"hook_interface"`
 	Secrets         map[string]interface{}  `json:"secrets"`
 	Form            *map[string]interface{} `json:"form,omitempty"`
 }
@@ -124,7 +124,7 @@ func PostWebhook(c *gin.Context) {
 			}
 		}
 
-		jsonData := []byte(fmt.Sprintf(`{"intent":{"form":{"hook_integration": "%s", "schema":{"properties":{"url":{"type":"string"}}}}}}`, payload.HookIntegration))
+		jsonData := []byte(fmt.Sprintf(`{"intent":{"form":{"hook_interface": "%s", "schema":{"properties":{"url":{"type":"string"}}}}}}`, payload.HookIntegration))
 		c.Data(http.StatusOK, "application/json", jsonData)
 		return
 	}
